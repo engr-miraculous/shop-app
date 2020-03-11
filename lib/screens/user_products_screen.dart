@@ -8,6 +8,11 @@ import '../screens/add_and_edit_user_product.dart';
 
 class UserProductsScreen extends StatelessWidget {
   static const navName = '/user-products';
+
+  // Future<void> updateUserProducs(BuildContext cntx) async {
+  //   await Provider.of<ProductProvider>(cntx).fetchAndAddProducts();
+  // }
+
   @override
   Widget build(BuildContext context) {
     var userProducts = Provider.of<ProductProvider>(context).items;
@@ -25,21 +30,25 @@ class UserProductsScreen extends StatelessWidget {
         ],
       ),
       drawer: MainDrawer(),
-      body: Padding(
-        padding: EdgeInsets.all(8),
-        child: ListView.builder(
-          itemCount: userProducts.length,
-          itemBuilder: (cntx, i) => Column(
-            children: <Widget>[
-              UserProductsItem(
-                userProducts[i].id,
-                userProducts[i].title,
-                userProducts[i].imageUrl,
-                productProvider.deletProduct,
-
-              ),
-              Divider(),
-            ],
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await Provider.of<ProductProvider>(context).fetchAndAddProducts();
+        },
+        child: Padding(
+          padding: EdgeInsets.all(8),
+          child: ListView.builder(
+            itemCount: userProducts.length,
+            itemBuilder: (cntx, i) => Column(
+              children: <Widget>[
+                UserProductsItem(
+                  userProducts[i].id,
+                  userProducts[i].title,
+                  userProducts[i].imageUrl,
+                  productProvider.deletProduct,
+                ),
+                Divider(),
+              ],
+            ),
           ),
         ),
       ),

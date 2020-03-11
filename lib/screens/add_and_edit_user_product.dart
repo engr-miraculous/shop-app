@@ -72,21 +72,23 @@ class _AddAndEditUserProductState extends State<AddAndEditUserProduct> {
     super.didChangeDependencies();
   }
 
-  void saveForm() {
-    setState(() {
-      _isLoading = true;
-    });
-
+  void saveForm() async {
     if (_form.currentState.validate()) {
       _form.currentState.save();
     } else
       return;
 
+    setState(() {
+      _isLoading = true;
+    });
+
     if (editedProduct.id == null) {
-      Provider.of<ProductProvider>(context, listen: false)
-          .saveProduct(editedProduct)
-          .catchError((error) {
-        return showDialog(
+      try {
+        await Provider.of<ProductProvider>(context, listen: false)
+            .saveProduct(editedProduct);
+      } catch (e) {
+        print(e.toString());
+        await showDialog(
           context: context,
           builder: (cntx) => AlertDialog(
             title: Text('Error!'),
@@ -102,21 +104,22 @@ class _AddAndEditUserProductState extends State<AddAndEditUserProduct> {
             ],
           ),
         );
-      }).then((furure) {
-        setState(() {
-          _isLoading = false;
-        });
-        Navigator.pop(context);
-      });
-    } else {
-      Provider.of<ProductProvider>(context, listen: false)
-          .editProduct(editedProduct.id, editedProduct);
-      setState(() {
-        _isLoading = false;
-      });
-      Navigator.pop(context);
-    }
+      }
+      // finally {
+      //   setState(() {
+      //     _isLoading = false;
+      //   });
+      // Navigator.pop(context);
 
+      // }
+    } else {
+      await Provider.of<ProductProvider>(context, listen: false)
+          .editProduct(editedProduct.id, editedProduct);
+    }
+    setState(() {
+      _isLoading = false;
+    });
+    Navigator.pop(context);
     // print(
     //     '  ${editedProduct.title}  ${editedProduct.price}  ${editedProduct.imageUrl}');
     //Navigator.pop(context);

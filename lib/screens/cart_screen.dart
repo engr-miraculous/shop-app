@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shop_app/providers/order_provider.dart';
+import '../providers/order_provider.dart';
 
 import '../providers/cart_prtovider.dart';
 import '../widgets/cart_item.dart';
@@ -9,7 +9,9 @@ class CartScreen extends StatelessWidget {
   static const navName = '/cart';
   @override
   Widget build(BuildContext context) {
-    var cartProvider = Provider.of<CartProvider>(context, listen: false);
+    var cartProvider = Provider.of<CartProvider>(
+      context,
+    );
     return Scaffold(
       appBar: AppBar(title: Text('Your Cart')),
       body: Column(
@@ -34,16 +36,7 @@ class CartScreen extends StatelessWidget {
                     ),
                     backgroundColor: Theme.of(context).primaryColor,
                   ),
-                  FlatButton(
-                    onPressed: () {
-                      Provider.of<OrderProvider>(context).addOrder(
-                        cartProvider.getCartItems.values.toList(),
-                        cartProvider.getTotalPrice,
-                      );
-                      cartProvider.clearCart();
-                    },
-                    child: Text('Place Order'),
-                  ),
+                  OrderButton(cartProvider: cartProvider),
                 ],
               ),
             ),
@@ -65,6 +58,55 @@ class CartScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class OrderButton extends StatefulWidget {
+  const OrderButton({
+    Key key,
+    @required this.cartProvider,
+  }) : super(key: key);
+
+  final CartProvider cartProvider;
+
+  @override
+  _OrderButtonState createState() => _OrderButtonState();
+}
+
+class _OrderButtonState extends State<OrderButton> {
+  var _isLoading = false;
+  @override
+  Widget build(BuildContext context) {
+    return FlatButton(
+      onPressed: widget.cartProvider.getCartItems.isEmpty
+          ? null
+          : () async {
+              setState(() {
+                _isLoading = true;
+              });
+              try {
+                await Provider.of<OrderProvider>(context).addOrder(
+                  widget.cartProvider.getCartItems.values.toList(),
+                  widget.cartProvider.getTotalPrice,
+                );
+              } catch (e) {
+                Scaffold.of(context).showSnackBar(SnackBar(
+                  content: Text(
+                      'Unable to place order, please check your network or contact support'),
+                ));
+                setState(() {
+                  _isLoading = false;
+                });
+                return;
+              }
+
+              setState(() {
+                widget.cartProvider.clearCart();
+                _isLoading = false;
+              });
+            },
+      child: _isLoading ? CircularProgressIndicator() : Text('Place Order'),
     );
   }
 }
